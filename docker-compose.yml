@@ -1,0 +1,29 @@
+version: "3.5"
+services:
+  desafio:
+    container_name: "desafio"
+    restart: always
+    build: .
+    environment:
+      - MONGO_URI=mongodb://mongo/catstore
+      - PORT=3000
+      - NODE_ENV=production
+    ports:
+      - "3000:3000"
+    links:
+      - database
+    depends_on:
+      - database
+    command: npm start
+
+  database:
+    container_name: "database"
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: desafio123
+      MONGO_INITDB_DATABASE: desafio-db
+    volumes:
+      - ./scripts/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro

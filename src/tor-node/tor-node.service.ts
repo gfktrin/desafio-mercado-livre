@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { DanWrapper } from 'src/shared/dan-wrapper';
 import { Sources } from 'src/shared/enums/sources.enum';
+import { getMinutesBetweenDates } from 'src/shared/time-helpers';
 import { TorNode } from './tor-node.model';
 
 @Injectable()
@@ -13,21 +14,32 @@ export class TorNodeService {
 
   async getIps() {
     const dan = new DanWrapper();
-    const ipList = await dan.getIps();
-    const operations = [];
-    for (const ip of ipList) {
-      operations.push({
-        updateOne: {
-          filter: { ip: ip },
-          update: {
-            $set: { updatedAt: new Date() },
-            $setOnInsert: { ip, createdAt: new Date() },
+    const lastUpdatedDanNode = await this.torNodeModel
+      .find({ source: Sources.dan })
+      .sort({ updatedAt: -1 })
+      .limit(1);
+    let ipList = [];
+
+    if (
+      getMinutesBetweenDates(lastUpdatedDanNode[0].updatedAt, new Date()) > 30
+    ) {
+      ipList = await dan.getIps();
+      const operations = [];
+      for (const ip of ipList) {
+        operations.push({
+          updateOne: {
+            filter: { ip: ip },
+            update: {
+              $set: { updatedAt: new Date() },
+              $setOnInsert: { ip, createdAt: new Date(), source: Sources.dan },
+            },
+            upsert: true,
           },
-          upsert: true,
-        },
-      });
+        });
+      }
+      await this.torNodeModel.bulkWrite(operations);
     }
-    await this.torNodeModel.bulkWrite(operations);
+    // TODO: return last updated ips
     return ipList;
   }
 

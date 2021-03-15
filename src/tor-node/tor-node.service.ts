@@ -14,17 +14,20 @@ export class TorNodeService {
   async getIps() {
     const dan = new DanWrapper();
     const ipList = await dan.getIps();
+    const operations = [];
     for (const ip of ipList) {
-      const torNode = await this.getByIp(ip);
-      if (torNode) {
-        torNode.updatedAt = new Date();
-        torNode.source = Sources.dan;
-        await this.torNodeModel.updateOne({ _id: torNode.id }, torNode).exec();
-      } else {
-        const node = new this.torNodeModel({ ip, source: Sources.dan });
-        await node.save();
-      }
+      operations.push({
+        updateOne: {
+          filter: { ip: ip },
+          update: {
+            $set: { updatedAt: new Date() },
+            $setOnInsert: { ip, createdAt: new Date() },
+          },
+          upsert: true,
+        },
+      });
     }
+    await this.torNodeModel.bulkWrite(operations);
     return ipList;
   }
 

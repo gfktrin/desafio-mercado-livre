@@ -29,7 +29,7 @@ export class TorNodeService {
       for (const ip of ipList) {
         operations.push({
           updateOne: {
-            filter: { ip: ip },
+            filter: { ip: ip, source: Sources.dan },
             update: {
               $set: { updatedAt: new Date() },
               $setOnInsert: { ip, createdAt: new Date(), source: Sources.dan },
@@ -39,19 +39,23 @@ export class TorNodeService {
         });
       }
       await this.torNodeModel.bulkWrite(operations);
-    }
-    const fetchedNodes = await this.torNodeModel.find(
-      {
-        updatedAt: {
-          $gte: new Date(lastUpdatedDanNode[0].updatedAt.getTime() - 2000 * 60),
-          $lt: lastUpdatedDanNode[0].updatedAt,
+    } else {
+      const fetchedNodes = await this.torNodeModel.find(
+        {
+          updatedAt: {
+            $gte: new Date(
+              lastUpdatedDanNode[0].updatedAt.getTime() - 2000 * 60,
+            ),
+            $lt: lastUpdatedDanNode[0].updatedAt,
+          },
+          source: Sources.dan,
         },
-        source: Sources.dan,
-      },
-      { ip: 1, _id: 0 },
-    );
+        { ip: 1, _id: 0 },
+      );
 
-    return fetchedNodes.map((node) => node.ip);
+      ipList = fetchedNodes.map((node) => node.ip);
+    }
+    return ipList;
   }
 
   async getByIp(ip: string) {

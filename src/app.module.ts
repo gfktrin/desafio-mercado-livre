@@ -8,7 +8,7 @@ import { UserModule } from './user/user.module';
 @Module({
   imports: [
     MongooseModule.forRoot(
-      'mongodb://root:desafio123@localhost:27017/desafio-db',
+      `mongodb://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@${process.env.MONGODB_HOST}:${process.env.MONGODB_PORT}/${process.env.MONGODB_DATABASE}`,
     ),
     TorNodeModule,
     UserModule,

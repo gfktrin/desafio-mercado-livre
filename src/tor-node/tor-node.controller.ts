@@ -6,14 +6,19 @@ import { TorNodeService } from './tor-node.service';
 export class TorNodeController {
   constructor(private service: TorNodeService) {}
 
-  @Get('/getips')
+  @Get('/')
   async getAll(): Promise<Array<string>> {
     return this.service.getIps();
   }
 
-  @Get('/getfiltered')
+  @Get('/filtered')
   async getFiltered(): Promise<Array<string>> {
     return this.service.getIpsOffList();
+  }
+
+  @Get('/exclusion-list')
+  async getExclusionList(): Promise<Array<string>> {
+    return this.service.getExclusionList();
   }
 
   @Post('/')

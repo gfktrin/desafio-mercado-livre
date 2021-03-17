@@ -11,4 +11,8 @@ export class UserService {
     const result = await new this.userModel(doc).save();
     return result.id;
   }
+
+  async getByEmail(email: string) {
+    return await this.userModel.findOne({ email }).exec();
+  }
 }

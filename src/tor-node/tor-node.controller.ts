@@ -11,6 +11,11 @@ export class TorNodeController {
     return this.service.getIps();
   }
 
+  @Get('/getfiltered')
+  async getFiltered(): Promise<Array<string>> {
+    return this.service.getIps();
+  }
+
   @Post('/')
   async create(@Body() torNode: TorNode): Promise<TorNode> {
     return this.service.create(torNode);

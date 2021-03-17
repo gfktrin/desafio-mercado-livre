@@ -12,8 +12,27 @@ export class TorNodeService {
     @InjectModel('TorNode') private readonly torNodeModel: Model<TorNode>,
   ) {}
 
-  async getIps() {
+  async fetchAndSave() {
     const dan = new DanWrapper();
+    const ipList = await dan.getIps();
+    const operations = [];
+    for (const ip of ipList) {
+      operations.push({
+        updateOne: {
+          filter: { ip: ip, source: Sources.dan },
+          update: {
+            $set: { updatedAt: new Date() },
+            $setOnInsert: { ip, createdAt: new Date(), source: Sources.dan },
+          },
+          upsert: true,
+        },
+      });
+    }
+    await this.torNodeModel.bulkWrite(operations);
+    return ipList;
+  }
+
+  async getIps() {
     const lastUpdatedDanNode = await this.torNodeModel
       .find({ source: Sources.dan })
       .sort({ updatedAt: -1 })
@@ -24,21 +43,7 @@ export class TorNodeService {
     let ipList = [];
 
     if (!lastUpdatedDanNode.length || fetchTimeLimit) {
-      ipList = await dan.getIps();
-      const operations = [];
-      for (const ip of ipList) {
-        operations.push({
-          updateOne: {
-            filter: { ip: ip, source: Sources.dan },
-            update: {
-              $set: { updatedAt: new Date() },
-              $setOnInsert: { ip, createdAt: new Date(), source: Sources.dan },
-            },
-            upsert: true,
-          },
-        });
-      }
-      await this.torNodeModel.bulkWrite(operations);
+      ipList = await this.fetchAndSave();
     } else {
       const fetchedNodes = await this.torNodeModel.find(
         {

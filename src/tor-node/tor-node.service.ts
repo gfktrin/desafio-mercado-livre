@@ -18,11 +18,12 @@ export class TorNodeService {
       .find({ source: Sources.dan })
       .sort({ updatedAt: -1 })
       .limit(1);
+    const fetchTimeLimit = lastUpdatedDanNode.length
+      ? getMinutesBetweenDates(lastUpdatedDanNode[0].updatedAt, new Date()) > 30
+      : false;
     let ipList = [];
 
-    if (
-      getMinutesBetweenDates(lastUpdatedDanNode[0].updatedAt, new Date()) > 30
-    ) {
+    if (!lastUpdatedDanNode.length || fetchTimeLimit) {
       ipList = await dan.getIps();
       const operations = [];
       for (const ip of ipList) {
@@ -39,8 +40,18 @@ export class TorNodeService {
       }
       await this.torNodeModel.bulkWrite(operations);
     }
-    // TODO: return last updated ips
-    return ipList;
+    const fetchedNodes = await this.torNodeModel.find(
+      {
+        updatedAt: {
+          $gte: new Date(lastUpdatedDanNode[0].updatedAt.getTime() - 2000 * 60),
+          $lt: lastUpdatedDanNode[0].updatedAt,
+        },
+        source: Sources.dan,
+      },
+      { ip: 1, _id: 0 },
+    );
+
+    return fetchedNodes.map((node) => node.ip);
   }
 
   async getByIp(ip: string) {
@@ -53,6 +64,7 @@ export class TorNodeService {
 
   async create(torNode: TorNode) {
     const createdNode = new this.torNodeModel(torNode);
+    createdNode.source = Sources.user;
     return await createdNode.save();
   }
 

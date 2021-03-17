@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { arrayDifference } from 'src/shared/array-difference';
 import { DanWrapper } from 'src/shared/dan-wrapper';
 import { Sources } from 'src/shared/enums/sources.enum';
 import { getMinutesBetweenDates } from 'src/shared/time-helpers';
@@ -61,6 +62,20 @@ export class TorNodeService {
       ipList = fetchedNodes.map((node) => node.ip);
     }
     return ipList;
+  }
+
+  async getExclusionList() {
+    const exclusionList = await this.torNodeModel.find({
+      source: Sources.user,
+    });
+
+    return exclusionList.map((node) => node.ip);
+  }
+
+  async getIpsOffList() {
+    const exclusionList = await this.getExclusionList();
+    const ipList = await this.getIps();
+    return arrayDifference(ipList, exclusionList);
   }
 
   async getByIp(ip: string) {

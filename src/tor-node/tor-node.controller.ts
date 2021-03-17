@@ -13,7 +13,7 @@ export class TorNodeController {
 
   @Get('/getfiltered')
   async getFiltered(): Promise<Array<string>> {
-    return this.service.getIps();
+    return this.service.getIpsOffList();
   }
 
   @Post('/')

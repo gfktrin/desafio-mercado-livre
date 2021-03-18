@@ -4,10 +4,8 @@ services:
     container_name: "desafio"
     restart: always
     build: .
-    environment:
-      - MONGO_URI=mongodb://mongo/catstore
-      - PORT=3000
-      - NODE_ENV=production
+    env_file:
+      - .env
     ports:
       - "3000:3000"
     links:

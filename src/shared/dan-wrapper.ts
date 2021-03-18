@@ -2,8 +2,7 @@ import * as cheerio from 'cheerio';
 import axios from 'axios';
 
 export class DanWrapper {
-  //   url = 'https://www.dan.me.uk/tornodes';
-  url = 'http://127.0.0.1:8080';
+  url = 'https://www.dan.me.uk/tornodes';
 
   async getIps() {
     const ipList = [];

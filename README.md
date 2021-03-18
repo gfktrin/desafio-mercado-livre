@@ -1,73 +1,77 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo_text.svg" width="320" alt="Nest Logo" /></a>
-</p>
-
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
-
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
-
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
+Tor ips collector
 ## Installation
 
 ```bash
-$ npm install
+# Create a .env file
+$ cp .env.example .env
+# Install dependencies
+$ npm i
 ```
 
 ## Running the app
 
 ```bash
-# development
-$ npm run start
+# Start services and database with docker
+$ docker compose up
 
-# watch mode
+# Start only database container
+$ docker compose up database
+
+# Start dev locally, be sure to change your 
+#.env MONGODB_HOST to localhost before
 $ npm run start:dev
-
-# production mode
-$ npm run start:prod
 ```
 
-## Test
+## Endpoints
+Every endpoint is set to use authentication except for the login endpoint, for testing you can comment
+line 10 on user controller:
+```
+// @UseGuards(JwtAuthGuard)
+```
+That way you can use it to create an user.
 
-```bash
-# unit tests
-$ npm run test
+#### Auth
+* `(POST) /auth/login`
+Makes sign in. It expects an object with email and password in body to work, it returns a token to be used as Bearer in Authorization.
+Body example:
+```
+{
+    "email": "test@test.com",
+    "password": "test123"
+}
+```
+#### User
+* `(POST) /`
+Creates a new user. It expects an object with name, email, and password in body to work.
+Body example:
+```
+{
+    "Name": "Test",
+    "email": "test@test.com",
+    "password": "test123"
+}
+```
+#### Tor node
+* `(GET) /`
+Returns an list containing every ip from the defined external sources. Because `dan.me.uk` has a limit of one request by half an hour, it saves the ips and returns the saved ones if the time limit has not been reached.
 
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+* `(POST) /`
+Saves an ip to database. It expects an object with the ip in the body to work.
+Body example:
+```
+{
+    "ip": "100.14.159.254"
+}
 ```
 
-## Support
+* `(GET) /filtered`
+Works in the same way as the `(GET) /` endpoint, but it excludes the ips that were previsiosly resgistered on `(POST) /`.
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+* `(GET) /exclusion-list`
+Returns an list containing the ips that were restered on `(POST) /`.
 
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](LICENSE).
+### How would i execute this project in cloud
+* In AWS
+I would create an EC2 instance, connect via ssh, download node,docker and docker-compose on it. Then run a container only with the node aplication and use MongoDB Atlas instead of running a conteiner with the database, as it seens more reliable.

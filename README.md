@@ -30,7 +30,7 @@ line 10 on user controller:
 ```
 // @UseGuards(JwtAuthGuard)
 ```
-That way you can use it to create an user.
+This way you can use it to create an user.
 
 #### Auth
 * `(POST) /auth/login`  
